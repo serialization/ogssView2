@@ -1,60 +1,51 @@
 #include "main.h"
+#include "MainFrame.h"
+#include "../empty/File.h"
 
-enum {
-   ID_Hello = 1
-};
-
-wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
-
-EVT_MENU(ID_Hello, MainFrame::OnHello)
-EVT_MENU(wxID_EXIT, MainFrame::OnExit)
-EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
-
-wxEND_EVENT_TABLE()
+#include <wx/cmdline.h>
 
 wxIMPLEMENT_APP(MainApp);
 
+using empty::api::File;
+
 bool MainApp::OnInit() {
-   MainFrame *frame = new MainFrame("OGSS View++", wxPoint(50, 50),
-         wxSize(1280, 800));
-   frame->Show(true);
-   return true;
+    // call default behaviour (mandatory)
+    if (!wxApp::OnInit())
+        return false;
+
+    MainFrame *frame = new MainFrame("OGSS View++", wxPoint(50, 50),
+                                     wxSize(1280, 800));
+    frame->Show(true);
+    return true;
+}
+
+
+static const wxCmdLineEntryDesc g_cmdLineDesc[] =
+        {
+                {wxCMD_LINE_SWITCH, "h", "help",
+                        "Print this help",
+                        wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP},
+                {wxCMD_LINE_NONE}
+        };
+
+void MainApp::OnInitCmdLine(wxCmdLineParser &parser) {
+    parser.SetDesc(g_cmdLineDesc);
+    // must refuse '/' as parameter starter or cannot use "/path" style paths
+    parser.SetSwitchChars(wxT("-"));
+
+    parser.AddUsageText("Pass one path to a binary OGSS file to display its contents.");
+    parser.AddParam("path", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 }
 
 bool MainApp::OnCmdLineParsed(wxCmdLineParser &parser) {
-
-}
-
-MainFrame::MainFrame(const wxString &title, const wxPoint &pos,
-      const wxSize &size) :
-      wxFrame(NULL, wxID_ANY, title, pos, size) {
-
-   wxMenu *menuFile = new wxMenu;
-   menuFile->Append(ID_Hello, "&Hello...\tCtrl-H",
-         "Help string shown in status bar for this menu item");
-   menuFile->AppendSeparator();
-   menuFile->Append(wxID_EXIT);
-   wxMenu *menuHelp = new wxMenu;
-   menuHelp->Append(wxID_ABOUT);
-   wxMenuBar *menuBar = new wxMenuBar;
-   menuBar->Append(menuFile, "&File");
-   menuBar->Append(menuHelp, "&Help");
-   SetMenuBar(menuBar);
-   CreateStatusBar();
-   SetStatusText("Welcome to wxWidgets!");
-}
-
-void MainFrame::OnExit(wxCommandEvent &event) {
-   Close(true);
-}
-
-void MainFrame::OnAbout(wxCommandEvent &event) {
-   wxMessageBox("This is a viewer for OGSS files.\nSee: ", "About OGSS View++",
-   wxOK | wxICON_INFORMATION);
-}
-
-void MainFrame::OnHello(wxCommandEvent &event) {
-   wxLogMessage
-   ("Hello world from wxWidgets!");
+    // the parser allows one or zero parameters which are paths
+    if (0 != parser.GetParamCount()) {
+        auto sg = File::open(parser.GetParam(0).ToStdString(), ogss::api::read | ogss::api::readOnly);
+        std::cout <<
+                  sg->size() << std::endl;
+        
+        delete sg;
+    }
+    return true;
 }
 
