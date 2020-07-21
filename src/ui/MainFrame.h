@@ -17,7 +17,7 @@
 
 
 enum {
-    ID_Hello = 1
+    ID_OpenFile = 1
 };
 
 
@@ -26,7 +26,7 @@ public:
     MainFrame(const wxString &title, const wxPoint &pos, const wxSize &size);
 
 private:
-    void OnHello(wxCommandEvent &event);
+    void OnOpenFile(wxCommandEvent &event);
 
     void OnExit(wxCommandEvent &event);
 

@@ -6,7 +6,7 @@
 #include "MainFrame.h"
 
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
-                EVT_MENU(ID_Hello, MainFrame::OnHello)
+                EVT_MENU(ID_OpenFile, MainFrame::OnOpenFile)
                 EVT_MENU(wxID_EXIT, MainFrame::OnExit)
                 EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
 wxEND_EVENT_TABLE()
@@ -16,8 +16,8 @@ MainFrame::MainFrame(const wxString &title, const wxPoint &pos,
         wxFrame(NULL, wxID_ANY, title, pos, size) {
 
     wxMenu *menuFile = new wxMenu;
-    menuFile->Append(ID_Hello, "&Hello...\tCtrl-H",
-                     "Help string shown in status bar for this menu item");
+    menuFile->Append(ID_OpenFile, "&Open...\tCtrl-O",
+                     "Open a binary graph in this window.");
     menuFile->AppendSeparator();
     menuFile->Append(wxID_EXIT);
     wxMenu *menuHelp = new wxMenu;
@@ -39,9 +39,18 @@ void MainFrame::OnAbout(wxCommandEvent &event) {
                  wxOK | wxICON_INFORMATION);
 }
 
-void MainFrame::OnHello(wxCommandEvent &event) {
-    wxLogMessage
-        ("Hello world from wxWidgets!");
+void MainFrame::OnOpenFile(wxCommandEvent &event) {
+    wxFileDialog
+            openFileDialog(this, _("Open a binary OGSS graph"), "", "",
+                           wxFileSelectorDefaultWildcardStr, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+    if (openFileDialog.ShowModal() == wxID_CANCEL)
+        return;     // the user changed idea...
+
+    if (!wxGetApp().load(openFileDialog.GetPath().ToStdString())) {
+        wxLogError("Cannot open file '%s'.", openFileDialog.GetPath());
+        return;
+    }
 }
 
 void MainFrame::afterLoad() {
