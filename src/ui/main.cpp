@@ -1,6 +1,4 @@
 #include "main.h"
-#include "MainFrame.h"
-#include "../empty/File.h"
 
 #include <wx/cmdline.h>
 
@@ -13,8 +11,12 @@ bool MainApp::OnInit() {
     if (!wxApp::OnInit())
         return false;
 
-    MainFrame *frame = new MainFrame("OGSS View++", wxPoint(50, 50),
-                                     wxSize(1280, 800));
+    frame = new MainFrame("OGSS View++", wxPoint(50, 50),
+                          wxSize(1280, 800));
+    // note: load happens before init. Hence we have to signal it here
+    if (nullptr != graph)
+        frame->afterLoad();
+
     frame->Show(true);
     return true;
 }
@@ -40,12 +42,37 @@ void MainApp::OnInitCmdLine(wxCmdLineParser &parser) {
 bool MainApp::OnCmdLineParsed(wxCmdLineParser &parser) {
     // the parser allows one or zero parameters which are paths
     if (0 != parser.GetParamCount()) {
-        auto sg = File::open(parser.GetParam(0).ToStdString(), ogss::api::read | ogss::api::readOnly);
-        std::cout <<
-                  sg->size() << std::endl;
-        
-        delete sg;
+        return load(parser.GetParam(0).ToStdString());
     }
+    return true;
+}
+
+MainApp::MainApp() : wxApp(), graph(nullptr), frame(nullptr) {
+}
+
+MainApp::~MainApp() {
+    delete graph;
+}
+
+bool MainApp::load(const std::string &path) {
+    // load graph and overwrite current graph on success
+    empty::api::File *next;
+    try {
+        next = File::open(path, ogss::api::read | ogss::api::readOnly);
+    } catch (ogss::Exception &e) {
+        std::cerr << "Failed to load " << path << std::endl
+                  << e.what() << std::endl;
+        return false;
+    }
+
+    if (nullptr != graph) {
+        delete graph;
+    }
+    graph = next;
+
+    if (nullptr != frame)
+        frame->afterLoad();
+
     return true;
 }
 

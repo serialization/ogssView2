@@ -14,11 +14,32 @@
 #ifndef WX_PRECOMP
 
 #include <wx/wx.h>
+#include "../empty/File.h"
+#include "MainFrame.h"
 
 #endif
 
 class MainApp : public wxApp {
+    empty::api::File *graph;
+    MainFrame *frame;
 public:
+    MainApp();
+
+    ~MainApp() override;
+
+    /**
+     * Try to load the argument path
+     * @return true iff the file could be loaded
+     */
+    bool load(const std::string &path);
+
+    /**
+     * @return the current graph. It is never null after a successful load operation.
+     */
+    const empty::api::File *get() const {
+        return graph;
+    }
+
     bool OnInit() override;
 
     void OnInitCmdLine(wxCmdLineParser &parser) override;

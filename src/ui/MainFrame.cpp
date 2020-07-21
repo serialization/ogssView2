@@ -43,3 +43,7 @@ void MainFrame::OnHello(wxCommandEvent &event) {
     wxLogMessage
         ("Hello world from wxWidgets!");
 }
+
+void MainFrame::afterLoad() {
+    SetTitle("OGSS View++ - " + wxGetApp().get()->currentPath());
+}

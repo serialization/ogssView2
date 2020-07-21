@@ -32,6 +32,12 @@ private:
 
     void OnAbout(wxCommandEvent &event);
 
+    /**
+     * Signal that a file has been loaded and that UI has to be updated.
+     */
+    void afterLoad();
+    friend class MainApp;
+
 wxDECLARE_EVENT_TABLE();
 };
 
