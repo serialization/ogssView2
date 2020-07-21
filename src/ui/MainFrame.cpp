@@ -35,7 +35,7 @@ void MainFrame::OnExit(wxCommandEvent &event) {
 }
 
 void MainFrame::OnAbout(wxCommandEvent &event) {
-    wxMessageBox("This is a viewer for OGSS files.\nSee: ", "About OGSS View++",
+    wxMessageBox("This is a viewer for binary OGSS graphs.\nhttps://github.com/serialization/ogssView2\nTimm Felden\nApache-2.0 License", "About OGSS View++",
                  wxOK | wxICON_INFORMATION);
 }
 
