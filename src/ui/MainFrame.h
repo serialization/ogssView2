@@ -12,6 +12,7 @@
 #ifndef WX_PRECOMP
 
 #include <wx/wx.h>
+#include "TypePane.h"
 
 #endif
 
@@ -39,6 +40,8 @@ private:
     friend class MainApp;
 
 wxDECLARE_EVENT_TABLE();
+
+    TypePane *types;
 };
 
 #include <wx/wxprec.h>

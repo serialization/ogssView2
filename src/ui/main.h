@@ -12,12 +12,11 @@
 #include <wx/cmdline.h>
 
 #ifndef WX_PRECOMP
-
 #include <wx/wx.h>
+#endif
+
 #include "../empty/File.h"
 #include "MainFrame.h"
-
-#endif
 
 class MainApp : public wxApp {
     empty::api::File *graph;

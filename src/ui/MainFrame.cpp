@@ -4,6 +4,7 @@
 
 #include "main.h"
 #include "MainFrame.h"
+#include "TypePane.h"
 
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
                 EVT_MENU(ID_OpenFile, MainFrame::OnOpenFile)
@@ -25,9 +26,13 @@ MainFrame::MainFrame(const wxString &title, const wxPoint &pos,
     wxMenuBar *menuBar = new wxMenuBar;
     menuBar->Append(menuFile, "&File");
     menuBar->Append(menuHelp, "&Help");
+
     wxFrameBase::SetMenuBar(menuBar);
     wxFrameBase::CreateStatusBar();
-    wxFrameBase::SetStatusText("Welcome to wxWidgets!");
+    wxFrameBase::SetStatusText("Welcome!");
+
+    SetSizer(new wxBoxSizer(wxHORIZONTAL));
+    types = new TypePane(this);
 }
 
 void MainFrame::OnExit(wxCommandEvent &event) {
@@ -35,7 +40,10 @@ void MainFrame::OnExit(wxCommandEvent &event) {
 }
 
 void MainFrame::OnAbout(wxCommandEvent &event) {
-    wxMessageBox("This is a viewer for binary OGSS graphs.\nhttps://github.com/serialization/ogssView2\nTimm Felden\nApache-2.0 License", "About OGSS View++",
+    wxMessageBox("This is a viewer for binary OGSS graphs.\n"
+                 "https://github.com/serialization/ogssView2\n"
+                 "Timm Felden\n"
+                 "Apache-2.0 License", "About OGSS View++",
                  wxOK | wxICON_INFORMATION);
 }
 
@@ -55,4 +63,5 @@ void MainFrame::OnOpenFile(wxCommandEvent &event) {
 
 void MainFrame::afterLoad() {
     SetTitle("OGSS View++ - " + wxGetApp().get()->currentPath());
+    types->afterLoad();
 }
