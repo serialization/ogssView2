@@ -28,7 +28,9 @@ void TypePane::afterLoad() {
 
     auto nodes = new std::unordered_map<ogss::AbstractPool *, wxTreeItemId>;
 
-    for (auto t : *sg) {
+    for (auto t : sg->allClasses()) {
+        std::cout << *t->name << std::endl;
+
         auto target = nodes->find(t->super);
         wxTreeItemId parent;
         if (nodes->end() != target) {
@@ -36,7 +38,21 @@ void TypePane::afterLoad() {
         } else {
             parent = root;
         }
-        (*nodes)[t] = tree->AppendItem(parent, t->name->c_str());
+
+        (*nodes)[t] = tree->AppendItem(parent,
+                                       wxString::Format("%s (%i/%i)", t->name->c_str(), t->staticSize(), t->size()));
+    }
+
+    for (auto t : sg->allEnums()) {
+        auto node = tree->AppendItem(root, wxString::Format("enum %s (%li)", t->name->c_str(), t->end() - t->begin()));
+
+        for (auto e : *t) {
+            tree->AppendItem(node, wxString(e->name->c_str()));
+        }
+    }
+
+    for (auto t : sg->allContainers()) {
+        tree->AppendItem(root, wxT("container typeID=") + wxString(std::to_string(t->typeID)));
     }
 
     delete nodes;

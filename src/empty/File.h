@@ -11,6 +11,7 @@
 #include <ogss/fieldTypes/ListType.h>
 #include <ogss/fieldTypes/SetType.h>
 #include <ogss/fieldTypes/MapType.h>
+#include <ogss/internal/EnumPool.h>
 
 #include "Pools.h"
 
