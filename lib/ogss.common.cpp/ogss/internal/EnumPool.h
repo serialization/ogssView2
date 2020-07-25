@@ -43,9 +43,7 @@ class AbstractEnumPool : public fieldTypes::FieldType {
 
   protected:
     AbstractEnumPool(int tid, const api::String name, const EnumBase last) :
-      FieldType(tid),
-      last(last),
-      name(name){};
+      FieldType(tid), last(last), name(name){};
 
     ~AbstractEnumPool() override = default;
 
@@ -56,7 +54,7 @@ class AbstractEnumPool : public fieldTypes::FieldType {
 class Creator;
 class Writer;
 
-template <typename T> class EnumPool : public AbstractEnumPool {
+template <typename T> class EnumPool final : public AbstractEnumPool {
     /**
      * values as seen from the combined specification
      */
@@ -83,8 +81,7 @@ template <typename T> class EnumPool : public AbstractEnumPool {
     EnumPool(int tid, api::String name,
              const std::vector<api::String> &foundValues,
              api::String *const known, const EnumBase last) :
-      AbstractEnumPool(tid, name, last),
-      values() {
+      AbstractEnumPool(tid, name, last), values() {
 
         api::EnumProxy<T> *p;
         if (foundValues.empty()) {
@@ -105,7 +102,7 @@ template <typename T> class EnumPool : public AbstractEnumPool {
             if (!known) {
                 svCount = 0;
                 values.reserve(foundValues.size());
-                for (size_t i = 0; i < values.size(); i++) {
+                for (size_t i = 0; i < foundValues.size(); i++) {
                     p = new api::EnumProxy<T>(T::UNKNOWN, this, foundValues[i],
                                               i);
                     values.push_back(p);

@@ -7,8 +7,8 @@
 #include "MainFrame.h"
 #include "main.h"
 
-#include <ogss/iterators/FieldIterator.h>
 #include <ogss/fieldTypes/BuiltinFieldType.h>
+#include <ogss/iterators/FieldIterator.h>
 
 /**
  * Allow tree entries to point to the ogss type representation.
@@ -16,8 +16,7 @@
 struct TypeEntry : public wxTreeItemData {
     ogss::fieldTypes::FieldType *const type;
 
-    explicit TypeEntry(ogss::fieldTypes::FieldType *const type) : type(type) {
-    }
+    explicit TypeEntry(ogss::fieldTypes::FieldType *const type) : type(type) {}
 };
 
 wxColour blend(const wxColour &left, const wxColour &right) {
@@ -27,13 +26,13 @@ wxColour blend(const wxColour &left, const wxColour &right) {
     return wxColour(r / 2, g / 2, b / 2);
 }
 
-TypePane::TypePane(MainFrame *parent) : panel(new wxPanel(parent, wxID_ANY)),
-                                        tree(new wxTreeCtrl(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
-                                                            wxTR_HAS_BUTTONS | wxTR_NO_LINES | wxTR_HIDE_ROOT)),
-                                        root(tree->AddRoot("root")),
-                                        type(new wxTextCtrl(panel, wxID_ANY, "select a type", wxDefaultPosition,
-                                                            wxDefaultSize,
-                                                            wxTE_MULTILINE | wxTE_READONLY)) {
+TypePane::TypePane(MainFrame *parent) :
+  panel(new wxPanel(parent, wxID_ANY)),
+  tree(new wxTreeCtrl(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+                      wxTR_HAS_BUTTONS | wxTR_NO_LINES | wxTR_HIDE_ROOT)),
+  root(tree->AddRoot("root")),
+  type(new wxTextCtrl(panel, wxID_ANY, "select a type", wxDefaultPosition,
+                      wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY)) {
 
     parent->GetSizer()->Add(panel, 1, wxEXPAND | wxALL, 1);
 
@@ -49,8 +48,10 @@ TypePane::TypePane(MainFrame *parent) : panel(new wxPanel(parent, wxID_ANY)),
 
     // for some reason type has by default the wrong style
     {
-        const auto base = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
-        type->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+        const auto base =
+          wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
+        type->SetBackgroundColour(
+          wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
         type->SetForegroundColour(base);
 
         classStyle.SetTextColour(blend(base, wxColour(0, 0, 220)));
@@ -65,8 +66,7 @@ TypePane::TypePane(MainFrame *parent) : panel(new wxPanel(parent, wxID_ANY)),
     }
 
     // on select type
-    tree->Bind(
-            wxEVT_TREE_SEL_CHANGED, &TypePane::onSelectionChanged, this);
+    tree->Bind(wxEVT_TREE_SEL_CHANGED, &TypePane::onSelectionChanged, this);
 }
 
 void TypePane::afterLoad() {
@@ -86,27 +86,28 @@ void TypePane::afterLoad() {
             parent = root;
         }
 
-        (*nodes)[t] = tree->AppendItem(parent,
-                                       wxString::Format("%s (%i/%i)", t->name->c_str(), t->staticSize(), t->size()),
-                                       -1, -1,
-                                       new TypeEntry(t));
+        (*nodes)[t] =
+          tree->AppendItem(parent,
+                           wxString::Format("%s (%i/%i)", t->name->c_str(),
+                                            t->staticSize(), t->size()),
+                           -1, -1, new TypeEntry(t));
     }
 
     for (auto t : sg->allEnums()) {
-        auto node = tree->AppendItem(root, wxString::Format("enum %s (%li)", t->name->c_str(), t->end() - t->begin()),
-                                     -1, -1,
-                                     new TypeEntry(t));
-
-        for (auto e : *t) {
-            tree->AppendItem(node, wxString(e->name->c_str()));
-        }
+        auto node =
+          tree->AppendItem(root,
+                           wxString::Format("enum %s (%li)", t->name->c_str(),
+                                            t->end() - t->begin()),
+                           -1, -1, new TypeEntry(t));
     }
 
-    // note: it is currently non-trivial to add strings because they are too lazy
-    // also, you barely ever need them
+    // note: it is currently non-trivial to add strings because they are too
+    // lazy also, you barely ever need them
 
-    for (auto t :sg->allContainers()) {
-        tree->AppendItem(root, toString(t), -1, -1, new TypeEntry(t));
+    for (auto t : sg->allContainers()) {
+        tree->AppendItem(
+          root, wxString::Format("%s (%li)", toString(t), t->knownSize()), -1,
+          -1, new TypeEntry(t));
     }
 
     delete nodes;
@@ -115,17 +116,20 @@ void TypePane::afterLoad() {
 void TypePane::onSelectionChanged(wxCommandEvent &e) {
     type->Clear();
 
-    auto entry = dynamic_cast<TypeEntry *>(tree->GetItemData(tree->GetSelection()));
+    auto entry =
+      dynamic_cast<TypeEntry *>(tree->GetItemData(tree->GetSelection()));
     if (nullptr == entry) {
         // root selected
         type->AppendText("select a type");
-    } else if (auto cls = dynamic_cast<ogss::AbstractPool * >(entry->type)) {
+    } else if (auto cls = dynamic_cast<ogss::AbstractPool *>(entry->type)) {
         displayClass(cls);
+    } else if (auto cls = dynamic_cast<ogss::internal::AbstractEnumPool *>(
+                 entry->type)) {
+        displayEnum(cls);
     } else {
         type->AppendText(toString(entry->type));
     }
 }
-
 
 void TypePane::displayClass(ogss::AbstractPool *t) {
     // TODO attributes
@@ -160,6 +164,18 @@ void TypePane::displayClass(ogss::AbstractPool *t) {
     type->AppendText("}");
 }
 
+void TypePane::displayEnum(ogss::internal::AbstractEnumPool *t) {
+    type->AppendText("enum ");
+    show(t);
+    type->AppendText(" {");
+    bool first = true;
+    for (auto e : *t) {
+        type->AppendText(first ? "\n   " : ",\n   ");
+        type->AppendText(*e->name);
+        first = false;
+    }
+    type->AppendText("\n}");
+}
 
 void TypePane::show(const ogss::fieldTypes::FieldType *const t) {
     using namespace ogss::fieldTypes;
@@ -174,7 +190,8 @@ void TypePane::show(const ogss::fieldTypes::FieldType *const t) {
     } else if (auto p = dynamic_cast<const ogss::AbstractPool *>(t)) {
         type->SetStyle(begin, end, classStyle);
 
-    } else if (auto p = dynamic_cast<const ogss::internal::AbstractEnumPool *>(t)) {
+    } else if (auto p =
+                 dynamic_cast<const ogss::internal::AbstractEnumPool *>(t)) {
         type->SetStyle(begin, end, enumStyle);
 
     } else {
@@ -187,50 +204,55 @@ std::string TypePane::toString(const ogss::fieldTypes::FieldType *t) {
 
     // built-in types
     switch (t->typeID) {
-        case ogss::KnownTypeID::BOOL:
-            return "bool";
-        case ogss::KnownTypeID::I8:
-            return "i8";
-        case ogss::KnownTypeID::I16:
-            return "i16";
-            break;
-        case ogss::KnownTypeID::I32:
-            return "i32";
-        case ogss::KnownTypeID::I64:
-            return "i64";
-        case ogss::KnownTypeID::V64:
-            return "v64";
-        case ogss::KnownTypeID::F32:
-            return "f32";
-        case ogss::KnownTypeID::F64:
-            return "f64";
-        case ogss::KnownTypeID::ANY_REF:
-            return "any";
-        case ogss::KnownTypeID::STRING:
-            return "string";
+    case ogss::KnownTypeID::BOOL:
+        return "bool";
+    case ogss::KnownTypeID::I8:
+        return "i8";
+    case ogss::KnownTypeID::I16:
+        return "i16";
+        break;
+    case ogss::KnownTypeID::I32:
+        return "i32";
+    case ogss::KnownTypeID::I64:
+        return "i64";
+    case ogss::KnownTypeID::V64:
+        return "v64";
+    case ogss::KnownTypeID::F32:
+        return "f32";
+    case ogss::KnownTypeID::F64:
+        return "f64";
+    case ogss::KnownTypeID::ANY_REF:
+        return "any";
+    case ogss::KnownTypeID::STRING:
+        return "string";
 
-        default: {
-            if (auto p = dynamic_cast<const ogss::AbstractPool *>(t)) {
-                return *p->name;
+    default: {
+        if (auto p = dynamic_cast<const ogss::AbstractPool *>(t)) {
+            return *p->name;
 
-            } else if (auto p = dynamic_cast<const ogss::internal::AbstractEnumPool *>(t)) {
-                return *p->name;
+        } else if (auto p =
+                     dynamic_cast<const ogss::internal::AbstractEnumPool *>(
+                       t)) {
+            return *p->name;
 
-            } else if (auto p = dynamic_cast<const ArrayType<ogss::api::Box> *>(t)) {
-                return toString(p->base) += "[]";
+        } else if (auto p =
+                     dynamic_cast<const ArrayType<ogss::api::Box> *>(t)) {
+            return toString(p->base) += "[]";
 
-            } else if (auto p = dynamic_cast<const ListType<ogss::api::Box> *>(t)) {
-                return "list<" + toString(p->base) + ">";
+        } else if (auto p = dynamic_cast<const ListType<ogss::api::Box> *>(t)) {
+            return "list<" + toString(p->base) + ">";
 
-            } else if (auto p = dynamic_cast<const SetType<ogss::api::Box> *>(t)) {
-                return "set<" + toString(p->base) + ">";
+        } else if (auto p = dynamic_cast<const SetType<ogss::api::Box> *>(t)) {
+            return "set<" + toString(p->base) + ">";
 
-            } else if (auto p = dynamic_cast<const MapType<ogss::api::Box, ogss::api::Box> *>(t)) {
-                return "map<" + toString(p->keyType) + ", " + toString(p->valueType) + ">";
+        } else if (auto p = dynamic_cast<
+                     const MapType<ogss::api::Box, ogss::api::Box> *>(t)) {
+            return "map<" + toString(p->keyType) + ", " +
+                   toString(p->valueType) + ">";
 
-            } else {
-                return "type:" + std::to_string(t->typeID);
-            }
+        } else {
+            return "type:" + std::to_string(t->typeID);
         }
+    }
     }
 }

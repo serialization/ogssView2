@@ -50,8 +50,11 @@ public:
 private:
     void onSelectionChanged(wxCommandEvent &e);
 
-    //! update type to show a representation of type
-    void displayClass(ogss::AbstractPool* t);
+    //! update type to show a representation of t
+    void displayClass(ogss::AbstractPool *t);
+
+    //! update type to show a representation of t
+    void displayEnum(ogss::internal::AbstractEnumPool *t);
 
     //! add the image of t to the type view
     void show(const ogss::fieldTypes::FieldType *t);
