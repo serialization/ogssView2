@@ -15,7 +15,7 @@ include_directories(lib/ogss.common.cpp)
 # wxWidgets
 ################################
 
-find_package(wxWidgets REQUIRED COMPONENTS net core base richtext)
+find_package(wxWidgets REQUIRED COMPONENTS net core base)
 include(${wxWidgets_USE_FILE})
 
 

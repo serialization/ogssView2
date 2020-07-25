@@ -2,7 +2,7 @@
 // Created by feldentm on 21.07.20.
 //
 
-#include <wx/richtext/richtextstyles.h>
+#include <ogss/iterators/FieldIterator.h>
 
 #include "TypePane.h"
 #include "MainFrame.h"
@@ -22,9 +22,9 @@ TypePane::TypePane(MainFrame *parent) : panel(new wxPanel(parent, wxID_ANY)),
                                         tree(new wxTreeCtrl(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                                                             wxTR_HAS_BUTTONS | wxTR_NO_LINES | wxTR_HIDE_ROOT)),
                                         root(tree->AddRoot("root")),
-                                        type(new wxRichTextCtrl(panel, wxID_ANY, "select a type", wxDefaultPosition,
-                                                                wxDefaultSize,
-                                                                wxRE_MULTILINE | wxRE_READONLY)) {
+                                        type(new wxTextCtrl(panel, wxID_ANY, "select a type", wxDefaultPosition,
+                                                            wxDefaultSize,
+                                                            wxTE_MULTILINE | wxTE_READONLY)) {
 
     parent->GetSizer()->Add(panel, 1, wxEXPAND | wxALL, 1);
 
@@ -40,13 +40,12 @@ TypePane::TypePane(MainFrame *parent) : panel(new wxPanel(parent, wxID_ANY)),
 
     // for some reason type has by default the wrong style
     {
-        wxRichTextAttr style;
-        style.SetTextColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-        style.SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
-        type->SetDefaultStyle(style);
-        type->SelectAll();
-        type->SetStyleEx(type->GetSelection().GetRange(), style);
-        type->SelectNone();
+        type->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+        type->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
+
+        linkStyle.SetTextColour(wxColor(0, 0, 220));
+        linkStyle.SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+        linkStyle.SetFontStyle(wxFONTSTYLE_ITALIC);
     }
 
     // on select type
@@ -120,17 +119,22 @@ void TypePane::displayClass(ogss::AbstractPool *t) {
     if (nullptr != t->super) {
         type->AppendText(" : ");
         auto name = t->super->name->c_str();
-        type->BeginURL(name);
-        type->BeginTextColour(wxColor(0,0,200));
+        auto begin = type->GetLastPosition();
         type->AppendText(name);
-        type->EndURL();
+        auto end = type->GetLastPosition();
+        type->SetStyle(begin, end, linkStyle);
     }
 
-    type->BeginTextColour(wxColor(0,0,200));
-    type->AppendText(" {");
-    type->Newline();
+    type->AppendText(" {\n");
 
-    // TODO fields
+    auto fs = t->allFields();
+    while(fs.hasNext()){
+        auto f = fs.next();
+
+        // TODO print field type
+        type->AppendText("   typeID:" + std::to_string(f->type->typeID) + " ");
+        type->AppendText(*f->name + ";\n");
+    }
 
     type->AppendText("}");
 }

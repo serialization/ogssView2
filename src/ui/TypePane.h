@@ -7,7 +7,6 @@
 
 #include <wx/wxprec.h>
 #include <wx/treectrl.h>
-#include <wx/richtext/richtextctrl.h>
 #include "../empty/File.h"
 
 #ifndef WX_PRECOMP
@@ -33,7 +32,8 @@ class TypePane {
     const wxTreeItemId root;
 
     //! the presentation of the selected type
-    wxRichTextCtrl *const type;
+    wxTextCtrl *const type;
+    wxTextAttr linkStyle;
 public:
 
     TypePane(MainFrame *parent);
