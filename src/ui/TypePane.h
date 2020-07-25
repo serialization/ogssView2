@@ -33,7 +33,11 @@ class TypePane {
 
     //! the presentation of the selected type
     wxTextCtrl *const type;
-    wxTextAttr linkStyle;
+    wxTextAttr classStyle;
+    wxTextAttr containerStyle;
+    wxTextAttr enumStyle;
+    wxTextAttr builtinStyle;
+    wxTextAttr inheritedStyle;
 public:
 
     TypePane(MainFrame *parent);
@@ -48,6 +52,13 @@ private:
 
     //! update type to show a representation of type
     void displayClass(ogss::AbstractPool* t);
+
+    //! add the image of t to the type view
+    void show(const ogss::fieldTypes::FieldType *t);
+
+public:
+    //! create human-readable name for t
+    static std::string toString(const ogss::fieldTypes::FieldType *t);
 };
 
 

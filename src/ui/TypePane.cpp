@@ -2,11 +2,13 @@
 // Created by feldentm on 21.07.20.
 //
 
-#include <ogss/iterators/FieldIterator.h>
-
 #include "TypePane.h"
+
 #include "MainFrame.h"
 #include "main.h"
+
+#include <ogss/iterators/FieldIterator.h>
+#include <ogss/fieldTypes/BuiltinFieldType.h>
 
 /**
  * Allow tree entries to point to the ogss type representation.
@@ -17,6 +19,13 @@ struct TypeEntry : public wxTreeItemData {
     explicit TypeEntry(ogss::fieldTypes::FieldType *const type) : type(type) {
     }
 };
+
+wxColour blend(const wxColour &left, const wxColour &right) {
+    int r = left.Red() + right.Red();
+    int g = left.Green() + right.Green();
+    int b = left.Blue() + right.Blue();
+    return wxColour(r / 2, g / 2, b / 2);
+}
 
 TypePane::TypePane(MainFrame *parent) : panel(new wxPanel(parent, wxID_ANY)),
                                         tree(new wxTreeCtrl(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
@@ -40,12 +49,19 @@ TypePane::TypePane(MainFrame *parent) : panel(new wxPanel(parent, wxID_ANY)),
 
     // for some reason type has by default the wrong style
     {
+        const auto base = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
         type->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
-        type->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
+        type->SetForegroundColour(base);
 
-        linkStyle.SetTextColour(wxColor(0, 0, 220));
-        linkStyle.SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
-        linkStyle.SetFontStyle(wxFONTSTYLE_ITALIC);
+        classStyle.SetTextColour(blend(base, wxColour(0, 0, 220)));
+
+        containerStyle.SetTextColour(blend(base, wxColour(220, 0, 0)));
+
+        enumStyle.SetTextColour(blend(base, wxColour(220, 100, 0)));
+
+        builtinStyle.SetTextColour(blend(base, wxColour(128, 220, 128)));
+
+        inheritedStyle.SetTextColour(blend(base, wxColour(128, 128, 128)));
     }
 
     // on select type
@@ -90,8 +106,7 @@ void TypePane::afterLoad() {
     // also, you barely ever need them
 
     for (auto t :sg->allContainers()) {
-        tree->AppendItem(root, wxT("container typeID=") + wxString(std::to_string(t->typeID)), -1, -1,
-                         new TypeEntry(t));
+        tree->AppendItem(root, toString(t), -1, -1, new TypeEntry(t));
     }
 
     delete nodes;
@@ -107,9 +122,10 @@ void TypePane::onSelectionChanged(wxCommandEvent &e) {
     } else if (auto cls = dynamic_cast<ogss::AbstractPool * >(entry->type)) {
         displayClass(cls);
     } else {
-        type->AppendText("TODO: typeID=" + std::to_string(entry->type->typeID));
+        type->AppendText(toString(entry->type));
     }
 }
+
 
 void TypePane::displayClass(ogss::AbstractPool *t) {
     // TODO attributes
@@ -118,23 +134,103 @@ void TypePane::displayClass(ogss::AbstractPool *t) {
 
     if (nullptr != t->super) {
         type->AppendText(" : ");
-        auto name = t->super->name->c_str();
-        auto begin = type->GetLastPosition();
-        type->AppendText(name);
-        auto end = type->GetLastPosition();
-        type->SetStyle(begin, end, linkStyle);
+
+        show(t->super);
     }
 
     type->AppendText(" {\n");
 
     auto fs = t->allFields();
-    while(fs.hasNext()){
+    while (fs.hasNext()) {
         auto f = fs.next();
 
-        // TODO print field type
-        type->AppendText("   typeID:" + std::to_string(f->type->typeID) + " ");
-        type->AppendText(*f->name + ";\n");
+        type->AppendText("\n   ");
+        show(f->type);
+        type->AppendText(" ");
+
+        auto begin = type->GetLastPosition();
+        type->AppendText(*f->name);
+        auto end = type->GetLastPosition();
+        if (f->owner != t)
+            type->SetStyle(begin, end, inheritedStyle);
+
+        type->AppendText(";\n");
     }
 
     type->AppendText("}");
+}
+
+
+void TypePane::show(const ogss::fieldTypes::FieldType *const t) {
+    using namespace ogss::fieldTypes;
+
+    // built-in types
+    auto begin = type->GetLastPosition();
+    type->AppendText(toString(t));
+    auto end = type->GetLastPosition();
+
+    if (0 <= t->typeID && t->typeID <= ogss::KnownTypeID::STRING) {
+        type->SetStyle(begin, end, builtinStyle);
+    } else if (auto p = dynamic_cast<const ogss::AbstractPool *>(t)) {
+        type->SetStyle(begin, end, classStyle);
+
+    } else if (auto p = dynamic_cast<const ogss::internal::AbstractEnumPool *>(t)) {
+        type->SetStyle(begin, end, enumStyle);
+
+    } else {
+        type->SetStyle(begin, end, containerStyle);
+    }
+}
+
+std::string TypePane::toString(const ogss::fieldTypes::FieldType *t) {
+    using namespace ogss::fieldTypes;
+
+    // built-in types
+    switch (t->typeID) {
+        case ogss::KnownTypeID::BOOL:
+            return "bool";
+        case ogss::KnownTypeID::I8:
+            return "i8";
+        case ogss::KnownTypeID::I16:
+            return "i16";
+            break;
+        case ogss::KnownTypeID::I32:
+            return "i32";
+        case ogss::KnownTypeID::I64:
+            return "i64";
+        case ogss::KnownTypeID::V64:
+            return "v64";
+        case ogss::KnownTypeID::F32:
+            return "f32";
+        case ogss::KnownTypeID::F64:
+            return "f64";
+        case ogss::KnownTypeID::ANY_REF:
+            return "any";
+        case ogss::KnownTypeID::STRING:
+            return "string";
+
+        default: {
+            if (auto p = dynamic_cast<const ogss::AbstractPool *>(t)) {
+                return *p->name;
+
+            } else if (auto p = dynamic_cast<const ogss::internal::AbstractEnumPool *>(t)) {
+                return *p->name;
+
+            } else if (auto p = dynamic_cast<const ArrayType<ogss::api::Box> *>(t)) {
+                return toString(p->base) += "[]";
+
+            } else if (auto p = dynamic_cast<const ListType<ogss::api::Box> *>(t)) {
+                return "list<" + toString(p->base) + ">";
+
+            } else if (auto p = dynamic_cast<const SetType<ogss::api::Box> *>(t)) {
+                return "set<" + toString(p->base) + ">";
+
+            } else if (auto p = dynamic_cast<const MapType<ogss::api::Box, ogss::api::Box> *>(t)) {
+                return "map<" + toString(p->keyType) + ", " + toString(p->valueType) + ">";
+
+            } else {
+                return "type:" + std::to_string(t->typeID);
+            }
+        }
+    }
 }
