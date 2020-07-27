@@ -32,18 +32,53 @@ TypePane::TypePane(MainFrame *parent) :
                       wxTR_HAS_BUTTONS | wxTR_NO_LINES | wxTR_HIDE_ROOT)),
   root(tree->AddRoot("root")),
   type(new wxTextCtrl(panel, wxID_ANY, "select a type", wxDefaultPosition,
-                      wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY)) {
+                      wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY)),
+
+  itemView(new wxPanel(panel, wxID_ANY)),
+
+  itemViewButtons(new wxPanel(itemView, wxID_ANY)),
+  previous(new wxButton(itemViewButtons, wxID_ANY, "<<", wxDefaultPosition,
+                        wxDefaultSize, wxBU_EXACTFIT)),
+  itemPosition(new wxStaticText(itemViewButtons, wxID_ANY, "0XX",
+                                wxDefaultPosition, wxDefaultSize,
+                                wxST_NO_AUTORESIZE)),
+  next(new wxButton(itemViewButtons, wxID_ANY, ">>", wxDefaultPosition,
+                    wxDefaultSize, wxBU_EXACTFIT)),
+
+  items(new wxListView(itemView, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+                       wxLC_REPORT | wxLC_NO_HEADER | wxLC_SINGLE_SEL)),
+  itemsOffset(0) {
 
     parent->GetSizer()->Add(panel, 1, wxEXPAND | wxALL, 1);
 
     // panel layout
     {
         auto sizer = new wxBoxSizer(wxHORIZONTAL);
+        itemViewButtons->SetSizer(sizer);
+
+        sizer->Add(previous, 0,
+                   wxEXPAND | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 1);
+        sizer->Add(itemPosition, 1, wxEXPAND | wxALL, 1);
+        sizer->Add(next, 0, wxEXPAND | wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL,
+                   1);
+    }
+    {
+        auto sizer = new wxBoxSizer(wxVERTICAL);
+        itemView->SetSizer(sizer);
+
+        sizer->Add(itemViewButtons, 0,
+                   wxEXPAND | wxALIGN_TOP | wxALIGN_CENTER_HORIZONTAL, 1);
+        sizer->Add(items, 1, wxEXPAND | wxALL, 1);
+    }
+    {
+        auto sizer = new wxBoxSizer(wxHORIZONTAL);
         panel->SetSizer(sizer);
 
         sizer->Add(tree, 1, wxEXPAND | wxALL, 1);
-        sizer->AddSpacer(10);
+        sizer->AddSpacer(3);
         sizer->Add(type, 1, wxEXPAND | wxALL, 1);
+        sizer->AddSpacer(3);
+        sizer->Add(itemView, 1, wxEXPAND | wxALL, 1);
     }
 
     // for some reason type has by default the wrong style

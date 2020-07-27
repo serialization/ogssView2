@@ -5,9 +5,10 @@
 #ifndef OGSS_VIEW_PP_TYPEPANE_H
 #define OGSS_VIEW_PP_TYPEPANE_H
 
-#include <wx/wxprec.h>
-#include <wx/treectrl.h>
 #include "../empty/File.h"
+#include <wx/listctrl.h>
+#include <wx/treectrl.h>
+#include <wx/wxprec.h>
 
 #ifndef WX_PRECOMP
 
@@ -38,8 +39,28 @@ class TypePane {
     wxTextAttr enumStyle;
     wxTextAttr builtinStyle;
     wxTextAttr inheritedStyle;
-public:
 
+    //! contains the item UI elements
+    wxPanel *const itemView;
+    //! contains the buttons in itemView
+    wxPanel *const itemViewButtons;
+
+    //! show previous elements in item list
+    wxButton *const previous;
+
+    //! show the current position in the item list
+    wxStaticText *const itemPosition;
+
+    //! show next elements in item list
+    wxButton *const next;
+
+    //! a list of items showing up to 100 elements
+    wxListView *const items;
+
+    // offset of items in 100 elements
+    int itemsOffset;
+
+  public:
     TypePane(MainFrame *parent);
 
     /**
@@ -47,7 +68,7 @@ public:
      */
     void afterLoad();
 
-private:
+  private:
     void onSelectionChanged(wxCommandEvent &e);
 
     //! update type to show a representation of t
@@ -59,10 +80,9 @@ private:
     //! add the image of t to the type view
     void show(const ogss::fieldTypes::FieldType *t);
 
-public:
+  public:
     //! create human-readable name for t
     static std::string toString(const ogss::fieldTypes::FieldType *t);
 };
 
-
-#endif //OGSS_VIEW_PP_TYPEPANE_H
+#endif // OGSS_VIEW_PP_TYPEPANE_H
