@@ -57,7 +57,7 @@ class TypePane {
     //! a list of items showing up to 100 elements
     wxListView *const items;
 
-    // offset of items in 100 elements
+    //! offset of items in 100 elements
     int itemsOffset;
 
   public:
@@ -69,7 +69,14 @@ class TypePane {
     void afterLoad();
 
   private:
+    //! triggered, if a type is selected
     void onSelectionChanged(wxCommandEvent &e);
+
+    //! triggered, if an object is selected
+    void onItemSelected(wxListEvent& event);
+
+    //! triggered, if an object is activated, i.e. enter/doubleclick
+    void onItemActivated(wxListEvent& event);
 
     //! update type to show a representation of t
     void displayClass(ogss::AbstractPool *t);
@@ -80,6 +87,8 @@ class TypePane {
     //! add the image of t to the type view
     void show(const ogss::fieldTypes::FieldType *t);
 
+    //! fill items with adequate entries
+    void refillItems();
   public:
     //! create human-readable name for t
     static std::string toString(const ogss::fieldTypes::FieldType *t);

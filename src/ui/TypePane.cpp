@@ -8,6 +8,7 @@
 #include "main.h"
 
 #include <ogss/fieldTypes/BuiltinFieldType.h>
+#include <ogss/internal/UnknownObject.h>
 #include <ogss/iterators/FieldIterator.h>
 
 /**
@@ -39,9 +40,9 @@ TypePane::TypePane(MainFrame *parent) :
   itemViewButtons(new wxPanel(itemView, wxID_ANY)),
   previous(new wxButton(itemViewButtons, wxID_ANY, "<<", wxDefaultPosition,
                         wxDefaultSize, wxBU_EXACTFIT)),
-  itemPosition(new wxStaticText(itemViewButtons, wxID_ANY, "0XX",
-                                wxDefaultPosition, wxDefaultSize,
-                                wxST_NO_AUTORESIZE)),
+  itemPosition(new wxStaticText(
+    itemViewButtons, wxID_ANY, "0XX", wxDefaultPosition, wxDefaultSize,
+    wxST_NO_AUTORESIZE | wxALIGN_CENTRE_HORIZONTAL)),
   next(new wxButton(itemViewButtons, wxID_ANY, ">>", wxDefaultPosition,
                     wxDefaultSize, wxBU_EXACTFIT)),
 
@@ -100,8 +101,10 @@ TypePane::TypePane(MainFrame *parent) :
         inheritedStyle.SetTextColour(blend(base, wxColour(128, 128, 128)));
     }
 
-    // on select type
+    // bind events
     tree->Bind(wxEVT_TREE_SEL_CHANGED, &TypePane::onSelectionChanged, this);
+    items->Bind(wxEVT_LIST_ITEM_SELECTED, &TypePane::onItemSelected, this);
+    items->Bind(wxEVT_LIST_ITEM_ACTIVATED, &TypePane::onItemActivated, this);
 }
 
 void TypePane::afterLoad() {
@@ -164,7 +167,13 @@ void TypePane::onSelectionChanged(wxCommandEvent &e) {
     } else {
         type->AppendText(toString(entry->type));
     }
+
+    itemsOffset = 0;
+    refillItems();
 }
+
+void TypePane::onItemSelected(wxListEvent &event) {}
+void TypePane::onItemActivated(wxListEvent &event) {}
 
 void TypePane::displayClass(ogss::AbstractPool *t) {
     // TODO attributes
@@ -290,4 +299,74 @@ std::string TypePane::toString(const ogss::fieldTypes::FieldType *t) {
         }
     }
     }
+}
+
+void TypePane::refillItems() {
+    using namespace ogss::fieldTypes;
+
+    items->ClearAll();
+    items->InsertColumn(0, "items");
+
+    auto entry =
+      dynamic_cast<TypeEntry *>(tree->GetItemData(tree->GetSelection()));
+
+    if (nullptr == entry) {
+        // root selected
+        type->AppendText("select a type");
+    } else if (auto cls = dynamic_cast<ogss::AbstractPool *>(entry->type)) {
+
+        // ok, so the only sane way to access objects if you are not the OGSS
+        // implementation is to use the iterator and to just skip objects that
+        // are not relevant
+        auto all = cls->allObjects();
+
+        int skip = 100 * itemsOffset;
+        while (skip-- > 0 && all->hasNext()) {
+            all->next();
+        }
+
+        if (all->hasNext()) {
+            for (int i = 0; i < 100 && all->hasNext(); i++) {
+                auto ref =
+                  dynamic_cast<ogss::internal::UnknownObject *>(all->next());
+                std::stringstream sb;
+                ref->prettyString(sb);
+                items->InsertItem(i, sb.str());
+            }
+        }
+
+    } else if (auto cls = dynamic_cast<ogss::internal::AbstractEnumPool *>(
+                 entry->type)) {
+
+        // we will always show all enums
+        // how many enum entries can a single enum have, right?
+        int i = 0;
+        for (auto ref : *cls) {
+            items->InsertItem(i++, *ref->name);
+        }
+
+    } else if (auto p =
+                 dynamic_cast<const ArrayType<ogss::api::Box> *>(entry->type)) {
+
+        items->InsertItem(0, "TODO arrays");
+
+    } else if (auto p =
+                 dynamic_cast<const ListType<ogss::api::Box> *>(entry->type)) {
+
+        items->InsertItem(0, "TODO lists");
+
+    } else if (auto p =
+                 dynamic_cast<const SetType<ogss::api::Box> *>(entry->type)) {
+
+        items->InsertItem(0, "TODO sets");
+
+    } else if (auto p =
+                 dynamic_cast<const MapType<ogss::api::Box, ogss::api::Box> *>(
+                   entry->type)) {
+
+        items->InsertItem(0, "TODO maps");
+    }
+
+    // resize column again to fit inserted elements
+    items->SetColumnWidth(0, wxLIST_AUTOSIZE);
 }
