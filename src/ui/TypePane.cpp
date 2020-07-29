@@ -10,6 +10,7 @@
 #include <ogss/fieldTypes/BuiltinFieldType.h>
 #include <ogss/internal/UnknownObject.h>
 #include <ogss/iterators/FieldIterator.h>
+#include <wx/gtk/notebook.h>
 
 /**
  * Allow tree entries to point to the ogss type representation.
@@ -27,15 +28,15 @@ wxColour blend(const wxColour &left, const wxColour &right) {
     return wxColour(r / 2, g / 2, b / 2);
 }
 
-TypePane::TypePane(MainFrame *parent) :
-  panel(new wxPanel(parent, wxID_ANY)),
-  tree(new wxTreeCtrl(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+TypePane::TypePane(wxNotebook *parent) :
+  TabEntry(parent),
+  tree(new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                       wxTR_HAS_BUTTONS | wxTR_NO_LINES | wxTR_HIDE_ROOT)),
   root(tree->AddRoot("root")),
-  type(new wxTextCtrl(panel, wxID_ANY, "select a type", wxDefaultPosition,
+  type(new wxTextCtrl(this, wxID_ANY, "select a type", wxDefaultPosition,
                       wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY)),
 
-  itemView(new wxPanel(panel, wxID_ANY)),
+  itemView(new wxPanel(this, wxID_ANY)),
 
   itemViewButtons(new wxPanel(itemView, wxID_ANY)),
   previous(new wxButton(itemViewButtons, wxID_ANY, "<<", wxDefaultPosition,
@@ -50,7 +51,8 @@ TypePane::TypePane(MainFrame *parent) :
                        wxLC_REPORT | wxLC_NO_HEADER | wxLC_SINGLE_SEL)),
   itemsOffset(0) {
 
-    parent->GetSizer()->Add(panel, 1, wxEXPAND | wxALL, 1);
+    // add panel to notebook
+    parent->InsertPage(0, this, "types", true);
 
     // panel layout
     {
@@ -73,13 +75,13 @@ TypePane::TypePane(MainFrame *parent) :
     }
     {
         auto sizer = new wxBoxSizer(wxHORIZONTAL);
-        panel->SetSizer(sizer);
+        this->SetSizer(sizer);
 
-        sizer->Add(tree, 1, wxEXPAND | wxALL, 1);
+        sizer->Add(tree, 1, wxEXPAND | wxALL, 0);
         sizer->AddSpacer(3);
-        sizer->Add(type, 1, wxEXPAND | wxALL, 1);
+        sizer->Add(type, 1, wxEXPAND | wxALL, 0);
         sizer->AddSpacer(3);
-        sizer->Add(itemView, 1, wxEXPAND | wxALL, 1);
+        sizer->Add(itemView, 1, wxEXPAND | wxALL, 0);
     }
 
     // for some reason type has by default the wrong style
@@ -103,7 +105,6 @@ TypePane::TypePane(MainFrame *parent) :
 
     // bind events
     tree->Bind(wxEVT_TREE_SEL_CHANGED, &TypePane::onSelectionChanged, this);
-    items->Bind(wxEVT_LIST_ITEM_SELECTED, &TypePane::onItemSelected, this);
     items->Bind(wxEVT_LIST_ITEM_ACTIVATED, &TypePane::onItemActivated, this);
 }
 
@@ -172,8 +173,20 @@ void TypePane::onSelectionChanged(wxCommandEvent &e) {
     refillItems();
 }
 
-void TypePane::onItemSelected(wxListEvent &event) {}
-void TypePane::onItemActivated(wxListEvent &event) {}
+void TypePane::onItemActivated(wxListEvent &event) {
+    auto *target =
+      reinterpret_cast<ogss::internal::UnknownObject *>(event.GetData());
+
+    std::cout << "selected ";
+    if (target) {
+        target->prettyString(std::cout);
+    } else {
+        std::cout << "(something else)";
+    }
+
+    std::cout << std::endl;
+    // TODO create new tab and select it
+}
 
 void TypePane::displayClass(ogss::AbstractPool *t) {
     // TODO attributes
@@ -332,6 +345,7 @@ void TypePane::refillItems() {
                 std::stringstream sb;
                 ref->prettyString(sb);
                 items->InsertItem(i, sb.str());
+                items->SetItemPtrData(i, (size_t)ref);
             }
         }
 
@@ -342,7 +356,9 @@ void TypePane::refillItems() {
         // how many enum entries can a single enum have, right?
         int i = 0;
         for (auto ref : *cls) {
-            items->InsertItem(i++, *ref->name);
+            items->InsertItem(i, *ref->name);
+            items->SetItemPtrData(i, 0);
+            i++;
         }
 
     } else if (auto p =

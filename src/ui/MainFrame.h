@@ -7,26 +7,23 @@
 
 // wxWidgets "Hello world" Program
 // For compilers that support precompilation, includes "wx/wx.h".
+#include <wx/notebook.h>
 #include <wx/wxprec.h>
 
 #ifndef WX_PRECOMP
 
-#include <wx/wx.h>
 #include "TypePane.h"
+#include <wx/wx.h>
 
 #endif
 
-
-enum {
-    ID_OpenFile = 1
-};
-
+enum { ID_OpenFile = 1 };
 
 class MainFrame : public wxFrame {
-public:
+  public:
     MainFrame(const wxString &title, const wxPoint &pos, const wxSize &size);
 
-private:
+  private:
     void OnOpenFile(wxCommandEvent &event);
 
     void OnExit(wxCommandEvent &event);
@@ -37,14 +34,22 @@ private:
      * Signal that a file has been loaded and that UI has to be updated.
      */
     void afterLoad();
+
+    //! set status text
+    void onTabChange(wxBookCtrlEvent& event);
+
+    wxDECLARE_EVENT_TABLE();
+
+    //! the body of the window is organized in tabs
+    wxNotebook *const body;
+
+    //! the presentation of the type system
+    TypePane *const types;
+
     friend class MainApp;
-
-wxDECLARE_EVENT_TABLE();
-
-    TypePane *types;
 };
 
-#include <wx/wxprec.h>
 #include <wx/wx.h>
+#include <wx/wxprec.h>
 
-#endif //OGSS_VIEW_PP_MAINFRAME_H
+#endif // OGSS_VIEW_PP_MAINFRAME_H

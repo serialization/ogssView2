@@ -70,6 +70,8 @@ bool MainApp::load(const std::string &path) {
     }
     graph = next;
 
+    // TODO delete all open object views
+
     if (nullptr != frame)
         frame->afterLoad();
 

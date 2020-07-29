@@ -6,12 +6,15 @@
 #define OGSS_VIEW_PP_TYPEPANE_H
 
 #include "../empty/File.h"
+#include "TabEntry.h"
 #include <wx/listctrl.h>
+#include <wx/notebook.h>
 #include <wx/treectrl.h>
 #include <wx/wxprec.h>
 
 #ifndef WX_PRECOMP
 
+#include <wx/gtk/notebook.h>
 #include <wx/wx.h>
 
 #endif
@@ -23,9 +26,7 @@ class MainFrame;
  *
  * @note this component can only be created if a file has been loaded
  */
-class TypePane {
-    //! container of the pane
-    wxPanel *const panel;
+class TypePane final : public TabEntry {
 
     //! all user-defined types in the file
     wxTreeCtrl *const tree;
@@ -55,13 +56,14 @@ class TypePane {
     wxButton *const next;
 
     //! a list of items showing up to 100 elements
+    //! @note itemData is either an UnknownObject* or nullptr
     wxListView *const items;
 
     //! offset of items in 100 elements
     int itemsOffset;
 
   public:
-    TypePane(MainFrame *parent);
+    explicit TypePane(wxNotebook *parent);
 
     /**
      *  reload the data from a graph
@@ -72,11 +74,8 @@ class TypePane {
     //! triggered, if a type is selected
     void onSelectionChanged(wxCommandEvent &e);
 
-    //! triggered, if an object is selected
-    void onItemSelected(wxListEvent& event);
-
-    //! triggered, if an object is activated, i.e. enter/doubleclick
-    void onItemActivated(wxListEvent& event);
+    //! triggered, if an object is chosen
+    void onItemActivated(wxListEvent &event);
 
     //! update type to show a representation of t
     void displayClass(ogss::AbstractPool *t);
@@ -89,9 +88,12 @@ class TypePane {
 
     //! fill items with adequate entries
     void refillItems();
+
   public:
     //! create human-readable name for t
     static std::string toString(const ogss::fieldTypes::FieldType *t);
+
+    std::string toString() { return "Overview of types and objects in this graph."; }
 };
 
 #endif // OGSS_VIEW_PP_TYPEPANE_H
