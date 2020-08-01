@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.2)
+cmake_minimum_required(VERSION 3.16.3)
 project(ogss_view_pp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -pedantic")
@@ -52,3 +52,5 @@ add_executable(ogssview ${SOURCE_FILES})
 
 # Link test executable against gtest & gtest_main
 target_link_libraries(ogssview ogss.common.cpp ${wxWidgets_LIBRARIES})
+
+set_property(TARGET ogssview PROPERTY INTERPROCEDURAL_OPTIMIZATION True)

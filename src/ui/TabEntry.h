@@ -16,6 +16,10 @@ class TabEntry : public wxPanel {
   protected:
     explicit TabEntry(wxNotebook *parent);
 
+    wxNotebook *getParent() const {
+        return dynamic_cast<wxNotebook *>(wxPanel::GetParent());
+    }
+
   public:
     //! return a human readable representation of the current content that will
     //! be shown in the status bar

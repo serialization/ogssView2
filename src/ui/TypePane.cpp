@@ -5,9 +5,10 @@
 #include "TypePane.h"
 
 #include "MainFrame.h"
+#include "ObjectPane.h"
+#include "Show.h"
 #include "main.h"
 
-#include <ogss/fieldTypes/BuiltinFieldType.h>
 #include <ogss/internal/UnknownObject.h>
 #include <ogss/iterators/FieldIterator.h>
 #include <wx/gtk/notebook.h>
@@ -145,8 +146,8 @@ void TypePane::afterLoad() {
 
     for (auto t : sg->allContainers()) {
         tree->AppendItem(
-          root, wxString::Format("%s (%li)", toString(t), t->knownSize()), -1,
-          -1, new TypeEntry(t));
+          root, wxString::Format("%s (%li)", Show::toString(t), t->knownSize()),
+          -1, -1, new TypeEntry(t));
     }
 
     delete nodes;
@@ -166,7 +167,7 @@ void TypePane::onSelectionChanged(wxCommandEvent &e) {
                  entry->type)) {
         displayEnum(cls);
     } else {
-        type->AppendText(toString(entry->type));
+        type->AppendText(Show::toString(entry->type));
     }
 
     itemsOffset = 0;
@@ -177,15 +178,18 @@ void TypePane::onItemActivated(wxListEvent &event) {
     auto *target =
       reinterpret_cast<ogss::internal::UnknownObject *>(event.GetData());
 
-    std::cout << "selected ";
     if (target) {
         target->prettyString(std::cout);
-    } else {
-        std::cout << "(something else)";
-    }
+        auto p = getParent();
+        auto size = p->GetPageCount();
+        p->InsertPage(size, new ObjectPane(p, target), Show::toString(target),
+                      true);
 
-    std::cout << std::endl;
-    // TODO create new tab and select it
+    } else {
+        // TODO create new tab and select it (non-objects)
+        std::cout << "selected "
+                  << "(something else)" << std::endl;
+    }
 }
 
 void TypePane::displayClass(ogss::AbstractPool *t) {
@@ -239,7 +243,7 @@ void TypePane::show(const ogss::fieldTypes::FieldType *const t) {
 
     // built-in types
     auto begin = type->GetLastPosition();
-    type->AppendText(toString(t));
+    type->AppendText(Show::toString(t));
     auto end = type->GetLastPosition();
 
     if (0 <= t->typeID && t->typeID <= ogss::KnownTypeID::STRING) {
@@ -253,64 +257,6 @@ void TypePane::show(const ogss::fieldTypes::FieldType *const t) {
 
     } else {
         type->SetStyle(begin, end, containerStyle);
-    }
-}
-
-std::string TypePane::toString(const ogss::fieldTypes::FieldType *t) {
-    using namespace ogss::fieldTypes;
-
-    // built-in types
-    switch (t->typeID) {
-    case ogss::KnownTypeID::BOOL:
-        return "bool";
-    case ogss::KnownTypeID::I8:
-        return "i8";
-    case ogss::KnownTypeID::I16:
-        return "i16";
-        break;
-    case ogss::KnownTypeID::I32:
-        return "i32";
-    case ogss::KnownTypeID::I64:
-        return "i64";
-    case ogss::KnownTypeID::V64:
-        return "v64";
-    case ogss::KnownTypeID::F32:
-        return "f32";
-    case ogss::KnownTypeID::F64:
-        return "f64";
-    case ogss::KnownTypeID::ANY_REF:
-        return "any";
-    case ogss::KnownTypeID::STRING:
-        return "string";
-
-    default: {
-        if (auto p = dynamic_cast<const ogss::AbstractPool *>(t)) {
-            return *p->name;
-
-        } else if (auto p =
-                     dynamic_cast<const ogss::internal::AbstractEnumPool *>(
-                       t)) {
-            return *p->name;
-
-        } else if (auto p =
-                     dynamic_cast<const ArrayType<ogss::api::Box> *>(t)) {
-            return toString(p->base) += "[]";
-
-        } else if (auto p = dynamic_cast<const ListType<ogss::api::Box> *>(t)) {
-            return "list<" + toString(p->base) + ">";
-
-        } else if (auto p = dynamic_cast<const SetType<ogss::api::Box> *>(t)) {
-            return "set<" + toString(p->base) + ">";
-
-        } else if (auto p = dynamic_cast<
-                     const MapType<ogss::api::Box, ogss::api::Box> *>(t)) {
-            return "map<" + toString(p->keyType) + ", " +
-                   toString(p->valueType) + ">";
-
-        } else {
-            return "type:" + std::to_string(t->typeID);
-        }
-    }
     }
 }
 
@@ -342,9 +288,8 @@ void TypePane::refillItems() {
             for (int i = 0; i < 100 && all->hasNext(); i++) {
                 auto ref =
                   dynamic_cast<ogss::internal::UnknownObject *>(all->next());
-                std::stringstream sb;
-                ref->prettyString(sb);
-                items->InsertItem(i, sb.str());
+
+                items->InsertItem(i, Show::toString(ref));
                 items->SetItemPtrData(i, (size_t)ref);
             }
         }

@@ -90,10 +90,10 @@ class TypePane final : public TabEntry {
     void refillItems();
 
   public:
-    //! create human-readable name for t
-    static std::string toString(const ogss::fieldTypes::FieldType *t);
 
-    std::string toString() { return "Overview of types and objects in this graph."; }
+    std::string toString() final {
+        return "Overview of types and objects in this graph.";
+    }
 };
 
 #endif // OGSS_VIEW_PP_TYPEPANE_H
