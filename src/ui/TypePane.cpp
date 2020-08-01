@@ -50,7 +50,8 @@ TypePane::TypePane(wxNotebook *parent) :
 
   items(new wxListView(itemView, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                        wxLC_REPORT | wxLC_NO_HEADER | wxLC_SINGLE_SEL)),
-  itemsOffset(0) {
+  itemsOffset(0),
+  maxItemOffset(0) {
 
     // add panel to notebook
     parent->InsertPage(0, this, "types", true);
@@ -62,9 +63,9 @@ TypePane::TypePane(wxNotebook *parent) :
 
         sizer->Add(previous, 0,
                    wxEXPAND | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 1);
-        sizer->Add(itemPosition, 1, wxEXPAND | wxALL, 1);
         sizer->Add(next, 0, wxEXPAND | wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL,
                    1);
+        sizer->Add(itemPosition, 1, wxEXPAND | wxALL, 1);
     }
     {
         auto sizer = new wxBoxSizer(wxVERTICAL);
@@ -107,6 +108,8 @@ TypePane::TypePane(wxNotebook *parent) :
     // bind events
     tree->Bind(wxEVT_TREE_SEL_CHANGED, &TypePane::onSelectionChanged, this);
     items->Bind(wxEVT_LIST_ITEM_ACTIVATED, &TypePane::onItemActivated, this);
+    next->Bind(wxEVT_BUTTON, &TypePane::onNextItems, this);
+    previous->Bind(wxEVT_BUTTON, &TypePane::onPreviousItems, this);
 }
 
 void TypePane::afterLoad() {
@@ -156,6 +159,9 @@ void TypePane::afterLoad() {
 void TypePane::onSelectionChanged(wxCommandEvent &e) {
     type->Clear();
 
+    // reset item list; max will be set by display
+    itemsOffset = maxItemOffset = 0;
+
     auto entry =
       dynamic_cast<TypeEntry *>(tree->GetItemData(tree->GetSelection()));
     if (nullptr == entry) {
@@ -170,7 +176,6 @@ void TypePane::onSelectionChanged(wxCommandEvent &e) {
         type->AppendText(Show::toString(entry->type));
     }
 
-    itemsOffset = 0;
     refillItems();
 }
 
@@ -192,6 +197,9 @@ void TypePane::onItemActivated(wxListEvent &event) {
 }
 
 void TypePane::displayClass(ogss::AbstractPool *t) {
+    // show items in buckets of 100
+    maxItemOffset = t->size() / 100;
+
     // TODO attributes
 
     type->AppendText(t->name->c_str());
@@ -225,6 +233,8 @@ void TypePane::displayClass(ogss::AbstractPool *t) {
 }
 
 void TypePane::displayEnum(ogss::internal::AbstractEnumPool *t) {
+    // maxItemOffset = 0; show all at once anyway
+
     type->AppendText("enum ");
     show(t);
     type->AppendText(" {");
@@ -261,6 +271,8 @@ void TypePane::show(const ogss::fieldTypes::FieldType *const t) {
 
 void TypePane::refillItems() {
     using namespace ogss::fieldTypes;
+
+    itemPosition->SetLabel(std::to_string(itemsOffset) + "XX");
 
     items->ClearAll();
     items->InsertColumn(0, "items");
@@ -329,4 +341,16 @@ void TypePane::refillItems() {
 
     // resize column again to fit inserted elements
     items->SetColumnWidth(0, wxLIST_AUTOSIZE);
+}
+void TypePane::onNextItems(wxCommandEvent &event) {
+    if (itemsOffset < maxItemOffset) {
+        itemsOffset++;
+        refillItems();
+    }
+}
+void TypePane::onPreviousItems(wxCommandEvent &event) {
+    if (0 < itemsOffset) {
+        itemsOffset--;
+        refillItems();
+    }
 }

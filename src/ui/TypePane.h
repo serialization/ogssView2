@@ -61,6 +61,8 @@ class TypePane final : public TabEntry {
 
     //! offset of items in 100 elements
     int itemsOffset;
+    //! largest legal item offset for the current view
+    int maxItemOffset;
 
   public:
     explicit TypePane(wxNotebook *parent);
@@ -89,8 +91,10 @@ class TypePane final : public TabEntry {
     //! fill items with adequate entries
     void refillItems();
 
-  public:
+    void onNextItems(wxCommandEvent &event);
+    void onPreviousItems(wxCommandEvent &event);
 
+  public:
     std::string toString() final {
         return "Overview of types and objects in this graph.";
     }
