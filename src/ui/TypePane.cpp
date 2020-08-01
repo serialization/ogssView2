@@ -179,7 +179,6 @@ void TypePane::onItemActivated(wxListEvent &event) {
       reinterpret_cast<ogss::internal::UnknownObject *>(event.GetData());
 
     if (target) {
-        target->prettyString(std::cout);
         auto p = getParent();
         auto size = p->GetPageCount();
         p->InsertPage(size, new ObjectPane(p, target), Show::toString(target),

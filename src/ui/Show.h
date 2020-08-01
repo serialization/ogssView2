@@ -18,6 +18,9 @@ struct Show {
 
     //! create a type#ID presentation of ref
     static std::string toString(const ogss::internal::UnknownObject *t);
+
+    //! display arbitrary field contents
+    static std::string toString(const ogss::fieldTypes::FieldType* ft, ogss::api::Box val);
 };
 
 #endif // OGSS_VIEW_PP_SHOW_H

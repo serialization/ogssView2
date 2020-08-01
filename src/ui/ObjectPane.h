@@ -10,13 +10,20 @@
 
 #include <ogss/internal/UnknownObject.h>
 
+/**
+ * A text field on the left side showing the data stored in the fields of the
+ * object. In the middle there shall be a list of "referred from" and a tree
+ * view "refers to". On the right side UI to show a graphical representation is
+ * shown. For now, we will stick with an XDot export.
+ */
 class ObjectPane final : public TabEntry {
     const ogss::internal::UnknownObject *const ref;
 
+    // human-readable presentation of field data
+    wxTextCtrl *const fields;
+
   public:
-    ObjectPane(wxNotebook *parent,
-               const ogss::internal::UnknownObject *const ref) :
-      TabEntry(parent), ref(ref) {}
+    ObjectPane(wxNotebook *parent, const ogss::internal::UnknownObject *ref);
 
     std::string toString() final;
 };
