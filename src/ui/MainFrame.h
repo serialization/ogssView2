@@ -7,7 +7,7 @@
 
 // wxWidgets "Hello world" Program
 // For compilers that support precompilation, includes "wx/wx.h".
-#include <wx/notebook.h>
+#include <wx/aui/auibook.h>
 #include <wx/wxprec.h>
 
 #ifndef WX_PRECOMP
@@ -36,12 +36,15 @@ class MainFrame : public wxFrame {
     void afterLoad();
 
     //! set status text
-    void onTabChange(wxBookCtrlEvent& event);
+    void onTabChange(wxAuiNotebookEvent& event);
+
+    //! prevent close for unique tabs
+    void onTabClose(wxAuiNotebookEvent& event);
 
     wxDECLARE_EVENT_TABLE();
 
     //! the body of the window is organized in tabs
-    wxNotebook *const body;
+    wxAuiNotebook *const body;
 
     //! the presentation of the type system
     TypePane *const types;

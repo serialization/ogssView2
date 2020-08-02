@@ -3,4 +3,4 @@
 //
 
 #include "TabEntry.h"
-TabEntry::TabEntry(wxNotebook *parent) : wxPanel(parent) {}
+TabEntry::TabEntry(wxAuiNotebook *parent) : wxPanel(parent) {}

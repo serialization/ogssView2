@@ -19,11 +19,19 @@
 class ObjectPane final : public TabEntry {
     const ogss::internal::UnknownObject *const ref;
 
-    // human-readable presentation of field data
+    //! human-readable presentation of field data
+    //! @todo  this should be a list with typename on the left and a clickable
+    //! value on the right that opens an ObjectPane if adequate
     wxTextCtrl *const fields;
 
+    //! mid pane showing both directions of referral
+    wxPanel *const referrals;
+
+    //! right pane containing the export/show as graph UI
+    wxPanel *const graph;
+
   public:
-    ObjectPane(wxNotebook *parent, const ogss::internal::UnknownObject *ref);
+    ObjectPane(wxAuiNotebook *parent, const ogss::internal::UnknownObject *ref);
 
     std::string toString() final;
 };

@@ -7,12 +7,14 @@
 #include "main.h"
 #include <ogss/iterators/FieldIterator.h>
 
-ObjectPane::ObjectPane(wxNotebook *parent,
+ObjectPane::ObjectPane(wxAuiNotebook *parent,
                        const ogss::internal::UnknownObject *const ref) :
   TabEntry(parent),
   ref(ref),
   fields(new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize,
-                        wxTE_MULTILINE | wxTE_READONLY)) {
+                        wxTE_MULTILINE | wxTE_READONLY)),
+  referrals(new wxPanel(this)),
+  graph(new wxPanel(this)) {
 
     const auto sg = wxGetApp().get();
 

@@ -14,8 +14,11 @@ wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
         MainFrame::MainFrame(const wxString &title, const wxPoint &pos,
                              const wxSize &size) :
   wxFrame(NULL, wxID_ANY, title, pos, size),
-  body(
-    new wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNB_TOP)),
+  body(new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+                         wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE |
+                           wxAUI_NB_TAB_EXTERNAL_MOVE |
+                           wxAUI_NB_WINDOWLIST_BUTTON |
+                           wxAUI_NB_CLOSE_ON_ACTIVE_TAB | wxAUI_NB_TOP)),
   types(new TypePane(body)) {
 
     wxMenu *menuFile = new wxMenu;
@@ -35,13 +38,15 @@ wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
     SetSizer(new wxBoxSizer(wxHORIZONTAL));
     GetSizer()->Add(body, 1, wxEXPAND | wxALL, 0);
-    body->SetBackgroundColour(
-      wxSystemSettings::GetColour(wxSYS_COLOUR_FRAMEBK));
 
-    SetMinSize(wxSize(640, 480));
+    wxTopLevelWindowBase::SetMinSize(wxSize(640, 480));
+
+    // choose a less horrible tab presentation
+    body->SetArtProvider(new wxAuiSimpleTabArt());
 
     // events
-    body->Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &MainFrame::onTabChange, this);
+    body->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &MainFrame::onTabChange, this);
+    body->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &MainFrame::onTabClose, this);
 }
 
 void MainFrame::OnExit(wxCommandEvent &event) { wxWindowBase::Close(true); }
@@ -72,7 +77,16 @@ void MainFrame::afterLoad() {
     SetTitle("OGSS View++ - " + wxGetApp().get()->currentPath());
     types->afterLoad();
 }
-void MainFrame::onTabChange(wxBookCtrlEvent &event) {
+
+void MainFrame::onTabChange(wxAuiNotebookEvent &event) {
     auto tab = dynamic_cast<TabEntry *>(body->GetCurrentPage());
     SetStatusText(tab->toString());
+}
+
+void MainFrame::onTabClose(wxAuiNotebookEvent &event) {
+    // type pane cannot be closed, because it cannot be reopened
+    if (dynamic_cast<TypePane *>(body->GetPage(event.GetSelection()))) {
+        event.Veto();
+        wxFrameBase::SetStatusText("Types cannot be closed.");
+    }
 }

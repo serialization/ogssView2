@@ -14,6 +14,7 @@
 
 #ifndef WX_PRECOMP
 
+#include <wx/aui/auibook.h>
 #include <wx/gtk/notebook.h>
 #include <wx/wx.h>
 
@@ -65,7 +66,7 @@ class TypePane final : public TabEntry {
     int maxItemOffset;
 
   public:
-    explicit TypePane(wxNotebook *parent);
+    explicit TypePane(wxAuiNotebook *parent);
 
     /**
      *  reload the data from a graph

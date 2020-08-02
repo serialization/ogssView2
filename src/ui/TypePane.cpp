@@ -29,7 +29,7 @@ wxColour blend(const wxColour &left, const wxColour &right) {
     return wxColour(r / 2, g / 2, b / 2);
 }
 
-TypePane::TypePane(wxNotebook *parent) :
+TypePane::TypePane(wxAuiNotebook *parent) :
   TabEntry(parent),
   tree(new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                       wxTR_HAS_BUTTONS | wxTR_NO_LINES | wxTR_HIDE_ROOT)),
@@ -54,7 +54,7 @@ TypePane::TypePane(wxNotebook *parent) :
   maxItemOffset(0) {
 
     // add panel to notebook
-    parent->InsertPage(0, this, "types", true);
+    parent->InsertPage(0, this, "Types", true);
 
     // panel layout
     {

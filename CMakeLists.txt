@@ -15,7 +15,7 @@ include_directories(lib/ogss.common.cpp)
 # wxWidgets
 ################################
 
-find_package(wxWidgets REQUIRED COMPONENTS net core base)
+find_package(wxWidgets REQUIRED COMPONENTS core base aui)
 include(${wxWidgets_USE_FILE})
 
 

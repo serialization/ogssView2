@@ -5,6 +5,7 @@
 #ifndef OGSS_VIEW_PP_TABENTRY_H
 #define OGSS_VIEW_PP_TABENTRY_H
 
+#include <wx/aui/auibook.h>
 #include <wx/notebook.h>
 #include <wx/wx.h>
 
@@ -14,10 +15,10 @@
  */
 class TabEntry : public wxPanel {
   protected:
-    explicit TabEntry(wxNotebook *parent);
+    explicit TabEntry(wxAuiNotebook *parent);
 
-    wxNotebook *getParent() const {
-        return dynamic_cast<wxNotebook *>(wxPanel::GetParent());
+    wxAuiNotebook *getParent() const {
+        return dynamic_cast<wxAuiNotebook *>(wxPanel::GetParent());
     }
 
   public:
