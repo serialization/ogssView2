@@ -30,10 +30,31 @@ class ObjectPane final : public TabEntry {
     //! right pane containing the export/show as graph UI
     wxPanel *const graph;
 
+    //! TODO labels
+
+    //! the maximum distance from the root to a node to be shown
+    wxSlider *const maxDistance;
+
+    //! the maximum distance from the root to a node to be shown
+    //! @note we will count every value as node because it will occupy screen
+    //! space
+    wxSlider *const maxNodes;
+
+    //! the maximum distance from the root to a node to be shown
+    wxSlider *const maxContainerItems;
+
+    //! create and open pdf
+    wxButton *const showPDF;
+    //! show in xdot
+    wxButton *const showXDOT;
+
   public:
     ObjectPane(wxAuiNotebook *parent, const ogss::internal::UnknownObject *ref);
 
     std::string toString() final;
+
+  private:
+    void onShowXDOT(wxCommandEvent &event);
 };
 
 #endif // OGSS_VIEW_PP_OBJECTPANE_H

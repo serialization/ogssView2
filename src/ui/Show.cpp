@@ -3,6 +3,7 @@
 //
 
 #include "Show.h"
+#include <iostream>
 std::string Show::toString(const ogss::fieldTypes::FieldType *t) {
     using namespace ogss::fieldTypes;
 
@@ -116,17 +117,113 @@ std::string Show::toString(const ogss::fieldTypes::FieldType *t,
 
         } else if (auto p =
                      dynamic_cast<const ArrayType<ogss::api::Box> *>(t)) {
-            return "some array???";
+
+            if (nullptr == val.array)
+                return "null";
+
+            auto ss = new std::stringstream{};
+            *ss << "[";
+            auto first = true;
+            auto all = val.array;
+
+            for (int i = 0; i < all->length(); i++) {
+                if (first)
+                    first = false;
+                else
+                    *ss << ", ";
+
+                *ss << toString(p->base, all->get(i));
+            }
+
+            *ss << "]";
+
+            auto rval = std::string(ss->str());
+            delete ss;
+
+            return std::string(rval);
 
         } else if (auto p = dynamic_cast<const ListType<ogss::api::Box> *>(t)) {
-            return "some list???";
+
+            if (nullptr == val.list)
+                return "null";
+
+            auto ss = new std::stringstream{};
+            *ss << "[";
+            auto first = true;
+            auto all = val.list;
+
+            for (int i = 0; i < all->length(); i++) {
+                if (first)
+                    first = false;
+                else
+                    *ss << ", ";
+
+                *ss << toString(p->base, all->get(i));
+            }
+
+            *ss << "]";
+
+            auto rval = std::string(ss->str());
+            delete ss;
+
+            return std::string(rval);
 
         } else if (auto p = dynamic_cast<const SetType<ogss::api::Box> *>(t)) {
-            return "some set???";
+
+            if (nullptr == val.set)
+                return "null";
+
+            auto ss = new std::stringstream{};
+            *ss << "{";
+            auto first = true;
+            auto all = val.set->all();
+
+            while (all->hasNext()) {
+                if (first)
+                    first = false;
+                else
+                    *ss << ", ";
+
+                *ss << toString(p->base, all->next());
+            }
+
+            *ss << "}";
+
+            auto rval = std::string(ss->str());
+            delete ss;
+
+            return std::string(rval);
 
         } else if (auto p = dynamic_cast<
                      const MapType<ogss::api::Box, ogss::api::Box> *>(t)) {
-            return "some set???";
+
+            if (nullptr == val.map)
+                return "null";
+
+            auto ss = new std::stringstream{};
+            *ss << "{";
+            auto first = true;
+
+            auto all = val.map->all();
+            while (all->hasNext()) {
+                if (first)
+                    first = false;
+                else
+                    *ss << ", ";
+
+                auto kv = all->next();
+                *ss << toString(p->keyType, kv.first);
+                *ss << " -> ";
+                *ss << toString(p->valueType, kv.second);
+            }
+
+            *ss << "}";
+            std::cout << ss->tellp() << std::endl;
+
+            auto rval = std::string(ss->str());
+            delete ss;
+
+            return std::string(rval);
 
         } else {
             return "some value of type:" + std::to_string(t->typeID);
