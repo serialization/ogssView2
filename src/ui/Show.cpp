@@ -113,6 +113,9 @@ std::string Show::toString(const ogss::fieldTypes::FieldType *t,
         } else if (auto p =
                      dynamic_cast<const ogss::internal::AbstractEnumPool *>(
                        t)) {
+            if (nullptr == val.enumProxy)
+                return *p->fileDefault()->name;
+
             return *val.enumProxy->name;
 
         } else if (auto p =
