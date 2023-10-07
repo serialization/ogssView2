@@ -206,7 +206,6 @@ template <typename T> class EnumPool final : public AbstractEnumPool {
         return (api::AbstractEnumProxy **)(values.data() + values.size());
     }
 
-
     api::AbstractEnumProxy *fileDefault() const final {
         return fvCount ? fileValues[0] : staticValues[0];
     }
